@@ -1,18 +1,14 @@
-import React from "react";
-import Header from "./components/Header";
-import Team from "./Team";
-import Profile from "./Profile";
-import Start from "./Start";
+import RoutesM from './routes'
 
 
 function App() {
 
     return (
-        <div className="App">
-            <Header/>
-            {/*<Team/>*/}
-            <Start/>
-        </div>
+
+
+        <RoutesM/>
+
+
     );
 }
 

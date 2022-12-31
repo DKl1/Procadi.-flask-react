@@ -3,9 +3,9 @@ from sqlalchemy.orm import sessionmaker, relationship, declarative_base, scoped_
 from marshmallow import Schema, fields, validate, ValidationError, validates
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 
-engine = create_engine('mysql+pymysql://root:feffKPklJozigUiaF4hy@containers-us-west-29.railway.app:6579/railway')
+
+engine = create_engine("mysql+pymysql://root:LaZh2kVrkAldhN9LQW94@containers-us-west-144.railway.app:7861/railway")
 Base = declarative_base()
-Base.metadata.create_all(bind=engine)
 SessionFactory = sessionmaker(bind=engine)
 Session = scoped_session(SessionFactory)
 
@@ -24,7 +24,6 @@ class CompanySchema(SQLAlchemyAutoSchema):
 		load_instance = True
 		include_fk = True
 
-
 class Team(Base):
 	__tablename__ = 'team'
 
@@ -41,7 +40,6 @@ class TeamSchema(SQLAlchemyAutoSchema):
 		include_relationships = False
 		load_instance = True
 		include_fk = True
-
 
 class Employee(Base):
 	__tablename__ = 'employee'
@@ -60,7 +58,9 @@ class Employee(Base):
 	is_owner = Column('is_owner', Boolean, default=False)
 	password = Column('password', String(150))
 	phone = Column('phone', String(13))
-	date_of_birth = Column('date_of_birth', DATE)
+
+	# date_of_birth = Column('date_of_birth', DATE)
+
 	role = Column('role', Boolean, default=False)
 
 
@@ -76,6 +76,7 @@ class EmployeeSchema(SQLAlchemyAutoSchema):
 		include_relationships = False
 		load_instance = True
 		include_fk = True
+
 
 	email = fields.Email(validate=validate_email)
 
@@ -96,7 +97,6 @@ class PropertySetSchema(SQLAlchemyAutoSchema):
 		include_relationships = False
 		load_instance = True
 		include_fk = True
-
 
 class Question(Base):
 	__tablename__ = 'question'
@@ -128,7 +128,6 @@ class FeedbackHistory(Base):
 	team_id = Column('team_id', Integer, ForeignKey(Team.id))
 	team = relationship(Team, backref='feedback_history', lazy='joined')
 
-
 class FeedbackHistorySchema(SQLAlchemyAutoSchema):
 	class Meta:
 		model = FeedbackHistory
@@ -138,6 +137,7 @@ class FeedbackHistorySchema(SQLAlchemyAutoSchema):
 
 	employee_id = fields.Integer()
 	property_set_id = fields.Integer()
+
 
 
 class Feedback(Base):
@@ -164,8 +164,8 @@ class PreAnswer(Base):
 	id = Column('id', Integer, primary_key=True, autoincrement=True)
 	text = Column('text', String(100))
 	numeric_value = Column('numeric_value', Integer)
-	property_set_id = Column('feedback_id', Integer, ForeignKey(PropertySet.id))
-	property_set = relationship(PropertySet, backref='pre_answer', lazy='joined')
+	question_id = Column('question_id', Integer, ForeignKey(Question.id))
+	question = relationship(Question, backref='pre_answer', lazy='joined')
 
 
 class PreAnswerSchema(SQLAlchemyAutoSchema):
@@ -180,6 +180,7 @@ class Answer(Base):
 	__tablename__ = 'answer'
 
 	id = Column('id', Integer, primary_key=True, autoincrement=True)
+
 	number = Column('number', Integer)
 
 	pre_answer_id = Column('pre_answer_id', Integer, ForeignKey(PreAnswer.id))
@@ -198,3 +199,4 @@ class AnswerSchema(SQLAlchemyAutoSchema):
 
 
 Base.metadata.create_all(bind=engine)
+
