@@ -1,12 +1,15 @@
+
 from flask import current_app as application, make_response, jsonify
 from flask import request
 from models import *
 from flask_httpauth import HTTPBasicAuth
+
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from werkzeug.security import generate_password_hash, check_password_hash
 import json
 
 auth = HTTPBasicAuth()
+
 
 
 @application.route('/allForPropertySet/', methods=['GET'])
@@ -116,6 +119,7 @@ def new_feedback():
     if not check_admin(session, get_jwt_identity()):
         return "Access denied", 403
 
+
     args = request.get_json()
     try:
         feedback_schema = FeedbackSchema()
@@ -184,6 +188,7 @@ def find_feedback_by_employee():
     return res, 200
 
 
+
 @application.route('/employee/', methods=['POST'])
 def new_employee():
     session = Session()
@@ -248,6 +253,7 @@ def find_employee_by_company():
     res = json.dumps([employee_schema.dump(i) for i in employees])
     session.close()
     return res, 200
+
 
 
 @application.route('/employee/findByCompany/noTeam', methods=['GET'])
@@ -478,6 +484,92 @@ def delete_team():
     return "Team deleted", 200
 
 
+# @application.route('/company/', methods=['DELETE'])
+# def delete_company():
+# 	session = Session()
+# 	args = request.args
+# 	company_id = args.get('company_id')
+#
+# 	"""redirect to employee, feedback history, feedback, answer needed"""
+#
+# 	session.query(Company).filter(Company.id == company_id).delete()
+# 	session.commit()
+# 	session.close()
+# 	return "Company deleted"
+
+
+@application.route('/feedbackHistory/', methods=['POST'])
+def new_feedback_history():
+	session = Session()
+	args = request.get_json()
+	try:
+		feedbackHistory_schema = FeedbackHistorySchema()
+		feedback_history = feedbackHistory_schema.load(args, session=session)
+		user = session.query(Employee).filter(Employee.id == args.get('employee_id')).first()
+		feedback_history.team_id = user.team_id
+		session.add(feedback_history)
+		session.commit()
+		res = feedbackHistory_schema.dump(feedback_history)
+		session.close()
+		return res, 200
+	except ValidationError as err:
+		session.close()
+		return str(err), 400
+
+
+@application.route('/feedbackHistory/id', methods=['GET'])
+def find_feedback_history():
+	session = Session()
+	args = request.args
+	feedbackHistory_id = args.get('feedbackHistory_id')
+	history = session.query(FeedbackHistory).filter(FeedbackHistory.employee_id == feedbackHistory_id).first()
+	feedbackHistory_schema = FeedbackHistorySchema()
+	res = feedbackHistory_schema.dump(history)
+	session.close()
+	return res, 200
+
+
+# @application.route('/feedbackHistory/delete', methods=['DELETE'])
+# def delete_feedback_history():
+# 	session = Session()
+# 	args = request.args
+# 	feedbackHistory_id = args.get('feedbackHistory_id')
+# 	session.query(Feedback).filter(Feedback.employee_id == feedbackHistory_id).delete()
+# 	session.query(FeedbackHistory).filter(FeedbackHistory.employee_id == feedbackHistory_id).delete()
+# 	session.commit()
+# 	session.close()
+# 	return "FeedbackHistory deleted"
+
+
+@application.route('/team', methods=['POST'])
+def new_team():
+	session = Session()
+	args = request.get_json()
+	try:
+		team_schema = TeamSchema()
+		team = team_schema.load(args, session=session)
+		session.add(team)
+		session.commit()
+		res = team_schema.dump(team)
+		session.close()
+		return res, 200
+	except ValidationError as err:
+		session.close()
+		return str(err), 400
+
+
+@application.route('/team/findByCompany', methods=['GET'])
+def find_team_by_company():
+	session = Session()
+	args = request.args
+	company_id = args.get('company_id')
+	teams = session.query(Team).filter(Team.company_id == company_id)
+	team_schema = TeamSchema()
+	res = json.dumps([team_schema.dump(i) for i in teams])
+	session.close()
+	return res, 200
+
+
 @application.route('/feedbackHistory/', methods=['POST'])
 @jwt_required()
 def new_feedback_history():
@@ -646,6 +738,23 @@ def find_pre_answer_by_property_set_id():
     res = json.dumps([pre_answer_schema.dump(i) for i in pre_answers])
     session.close()
     return res, 200
+
+
+@application.route('/question', methods=['POST'])
+def new_question():
+	session = Session()
+	args = request.get_json()
+	try:
+		question_schema = QuestionSchema()
+		question = question_schema.load(args, session=session)
+		session.add(question)
+		session.commit()
+		res = question_schema.dump(question)
+		session.close()
+		return res, 200
+	except ValidationError as err:
+		session.close()
+		return str(err), 400
 
 
 @application.route('/question', methods=['POST'])
@@ -877,9 +986,11 @@ def page_new_property_set_unique():
         return str(err), 400
 
 
+
 @application.route('/allPropertySet/', methods=['GET'])
 @jwt_required()
 def page_find_property_set():
+
     session = Session()
     if not check_admin(session, get_jwt_identity()):
         return "Access denied", 403
